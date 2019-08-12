@@ -1,0 +1,10 @@
+#!/bin/bash
+
+if [[ $# != 1 ]];
+then
+    echo "Usage: $0 idx"
+    echo "  idx - 1..n, where n instances are running"
+    exit 1
+fi
+
+ssh -i deploy/deployer ubuntu@`cat deploy/hosts | sed $(($1+1))'q;d'`

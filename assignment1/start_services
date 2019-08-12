@@ -1,0 +1,6 @@
+#!/bin/bash
+
+cd deploy/
+echo "[ec2]" > hosts
+terraform output ec2_public_dns | grep amazonaws | cut -d\" -f2 >> hosts
+ansible-playbook bootstrap_ec2.yml
