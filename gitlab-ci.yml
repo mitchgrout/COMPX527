@@ -1,25 +1,31 @@
 image: "python: 3.7"
 
+before_script:
+  - python --version
+  - pip install -r requirement.txt
+
 
 stages:
-  - Static Analysis
+  - analyze
   - test
   - deploy
 
 
-:
-  stage: ver
+pylint:
+  stage: analyze
+  allow_failure: true
   script:
-      - python --version
+      - pip install pylint --quiet
+      - pylint --ignored -classs=_socketobject *.py
 
 
 test:
   stage: test
   script:
-      - apt-get update -qy
-      - apt-get install -y python-dev python-pip
-      - pip install -r requirement.txt
-      - python -m unittest discover --verbose . "*_test.py"
+      - pip install nose
+      - python -m runtest xtest
+      - pip install pytest --quiet
+      - pytest
   only:
     gitlabci
 
@@ -27,7 +33,7 @@ test:
 deploy:
   stage: deploy
   script:
-      - apt-get update -qy
+      - echo "deploy"
   only:
     gitlabci
 
