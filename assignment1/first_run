@@ -1,0 +1,6 @@
+#!/bin/bash
+
+ssh-keygen -f deploy/deployer
+cd deploy/
+terraform init
+echo "Reminder: Make sure to copy your credentials into ~/.aws/credentials"

@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cd deploy/
+ansible-playbook update_ec2.yml

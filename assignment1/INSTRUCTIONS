@@ -1,0 +1,27 @@
+1) If this is a fresh pull, start by running ./first_run, otherwise go to 3)
+
+2) You now have a public/private key pair stored in deploy/deployer{,.pub}
+   If you want to rename/move these, you will need to change some files
+
+3) Check deploy/vars.tf to see if there's anything that needs to be changed for your system
+   - whitelisted_ip_blocks:    
+       the IPs allowed to talk to our instances
+   - deployer_public_key_path: 
+       a path, relative to deploy/, pointing to your public key
+   - server_port:              
+       the port which the web server will be run on
+   - instance_count:           
+       the number of EC2 instances to start 
+ 
+4) Run ./create_infrastructure to construct the specified number of EC2 instances,
+   automatically attach them to the load balancer, and set up your created keys. 
+   This should be run once
+
+5) Run ./start_services to bootstrap each of these systems via ansible. 
+   This should be run once
+
+6) Run ./update_html to automatically copy the html/ file to the servers
+
+7) If manual management is required, use ./ssh_into [n] to connect to instance number n
+
+8) Use ./destroy_infrastructure to tear everything down
