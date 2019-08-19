@@ -26,14 +26,10 @@ test:
       - python -m runtest xtest
       - pip install pytest --quiet
       - pytest
-  only:
-    gitlabci
 
 
 deploy:
   stage: deploy
   script:
       - echo "deploy"
-  only:
-    gitlabci
 
