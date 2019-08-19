@@ -15,7 +15,7 @@ with open('image_info_test2017.json', 'r') as fd:
     import json
     data = json.loads(fd.read(-1))['images']
     for elem in data:
-        info.append({name:elem[name] for name in ['file_name', 'width', 'height']})
+        info.append({name:elem[name] for name in ['file_name', 'coco_url', 'width', 'height']})
 
 # Set up Flask
 from flask import Flask, request, jsonify
@@ -37,15 +37,27 @@ def detect_image():
     elif thresh > 1.0:
         return j({ 'error': '>1 threshhold supplied' }), 400
         
-    # Fetch the image
+    # Fetch the image; this can be passed either as an uploaded image OR URL
     # NOTE: For sanity we only accept <2MB images
-    if 'image' not in request.files:
+    if 'image' in request.files:
+        stream = request.files['image'].stream.read(2 * 1024 * 1024)
+        if len(request.files['image'].stream.read(1)):
+            return j({ 'error': 'input images are restricted to 2MB' }), 400
+    elif 'url' in request.values:
+        from requests import get
+        resp = get(request.values['url'], stream=True)
+        by = []
+        read_chunk = False
+        for chunk in resp.iter_content(2 * 1024 * 1024):
+            if read_chunk:
+                return j({ 'error': 'input images are restricted to 2MB' }), 400
+            by += chunk
+            read_chunk = True
+        stream = bytes(by)
+    else:
         return j({ 'error': 'no image supplied' }), 400
-    stream = request.files['image'].stream.read(2 * 1024 * 1024)
-    # Check if theres more data to consume => input larger than 2MB
-    if len(request.files['image'].stream.read(1)):
-        return j({ 'error': 'input images are restricted to 2MB' }), 400
-    # Try to parse the image
+
+   # Try to parse the image
     image = None
     try:
         import numpy
@@ -85,7 +97,24 @@ def detect_image():
 
 @app.route('/info', methods=['GET'])
 def get_coco_info():
-    return j({ 'success': info }), 200
+    # Parse the from/to params
+    fr = None
+    to = None
+    if 'from' in request.args:
+        try:
+            fr = int(request.args['from'])
+            fr = max(fr, 0)
+        except (ValueError, TypeError):
+            return j({ 'error': 'from must be an integer' }), 400
+    if 'to' in request.args:
+        try:
+            to = int(request.args['to'])
+            to = max(to, 0)
+        except (ValueError, TypeError):
+            return j({ 'error': 'to must be an integer' }), 400
+
+    # Slice the pre-loaded info 
+    return j({ 'success': info[fr:to] }), 200
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)

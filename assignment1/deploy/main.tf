@@ -11,7 +11,7 @@ resource "aws_instance" "ec2_instances" {
     # ubuntu-xenial-16.04-amd64-server-20190605
     # TODO: Use custom AMI?
     ami           = "ami-01d9d5f6cecc31f85"
-    instance_type = "t2.large"
+    instance_type = "t2.2xlarge"
 
     # Hook up SSH key and configure ports
     key_name        = aws_key_pair.deployer.key_name 

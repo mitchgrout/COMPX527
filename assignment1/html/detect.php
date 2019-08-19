@@ -12,6 +12,12 @@ if (isset($_FILES['image']))
     $post['image'] = curl_file_create($_FILES['image']['tmp_name']);
 }
 
+# Ditto for url
+if (isset($_POST['url']))
+{
+    $post['url'] = $_POST['url'];
+}
+
 # Ditto for thresh
 if (isset($_POST['thresh']))
 {

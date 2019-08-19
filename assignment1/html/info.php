@@ -1,11 +1,11 @@
 <?php
-$url     = 'http://'.$_SERVER['SERVER_ADDR'].':8080/info';
-$data    = array();
+$url     = 'http://'.$_SERVER['SERVER_ADDR'].':8080/info?';
+if (isset($_GET['from'])) $url = $url."from=".$_GET['from'].'&';
+if (isset($_GET['to']))   $url = $url."to="  .$_GET['to']  .'&';
 $options = array(
     'http' => array(
     'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
-    'method'  => 'GET',
-    'content' => http_build_query($data)
+    'method'  => 'GET'
     )
 );
 $context  = stream_context_create($options);
