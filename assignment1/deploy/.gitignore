@@ -1,0 +1,8 @@
+# Crypto keys
+deployer
+deployer.pub
+
+# Terraform state
+*.tfstate
+.terraform/
+hosts

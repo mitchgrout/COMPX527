@@ -1,0 +1,6 @@
+#!/bin/bash
+
+cd deploy/
+terraform apply -auto-approve
+echo "[ec2]" > hosts
+terraform output ec2_public_dns | grep amazonaws | cut -d\" -f2 >> hosts
