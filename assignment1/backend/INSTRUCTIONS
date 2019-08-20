@@ -1,0 +1,8 @@
+1) If not already started, run the server with `python3 main.py`
+
+2) To run unittests manually, run `python3 test_main.py`
+
+3) To query the server manually, use `curl -F 'image=@path/to/image.png' localhost:8080/detect` or `curl localhost:8080/info`
+   If an appropriate HTTP server is running, these can instead go to url/detect.php and url/info.php respectively
+   You may have to use the --http1.0 flag to make this work with curl however.
+

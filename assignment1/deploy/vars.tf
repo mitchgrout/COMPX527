@@ -22,5 +22,5 @@ variable "server_port" {
 variable "instance_count" {
     description = "Number of EC2 instances to run"
     type        = number
-    default     = 4
+    default     = 2
 }
