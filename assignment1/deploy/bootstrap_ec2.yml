@@ -6,14 +6,14 @@
 
   tasks:
     - name: Check for Python
-      raw: test -e /usr/bin/python
+      raw: test -e /usr/bin/python3
       changed_when: false
       failed_when: false
-      register: check_python
+      register: check_python3
 
     - name: Install Python
-      raw: apt-get -y update && apt-get install -y python-minimal
-      when: check_python.rc != 0
+      raw: apt-get -y update && apt-get install -y python3
+      when: check_python3.rc != 0
 
 - hosts: ec2
   remote_user: ubuntu
@@ -22,7 +22,7 @@
 
   tasks:
     - set_fact:
-        ansible_python_interpreter: /usr/bin/python
+        ansible_python_interpreter: /usr/bin/python3
 
     - name: Check hosts are running
       ping:
@@ -32,40 +32,36 @@
         update_cache: yes
         upgrade: yes
 
-    - name: Install apt-transport-https
+    - name: Fetch Pip
       apt:
-        name: apt-transport-https
+        name: python3-pip
 
-    - name: Download Docker key
-      get_url:
-        url: https://download.docker.com/linux/ubuntu/gpg
-        dest: /tmp/apt-key.gpg
+    - name: Update Pip
+      pip:
+        name: pip
 
-    - name: Register Docker key
-      shell: apt-key add /tmp/apt-key.gpg
-
-    - name: Register Docker apt repo
-      shell: echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable" > /etc/apt/sources.list.d/docker.list
-
-    - name: Run apt-get update/upgrade again
+    - name: Fetch APT dependencies 
       apt:
-        update_cache: yes
-        upgrade: yes
+        name: [libopencv-dev, php7.0-curl, php7.0, php7.0-cgi, lighttpd]
 
-    - name: Install Docker
-      apt: 
-        name: [docker-ce, docker-ce-cli, containerd.io]
+    - name: Fetch Pip dependencies
+      pip:
+        name: [flask, numpy, keras, tensorflow] 
 
-    - name: Start Darknet server
-      shell: docker run --name darknet-server --restart always --detach -p 8080:8080 glenncumming/darknet-server
+    - name: Install keras_retinanet
+      pip:
+        name: git+https://github.com/fizyr/keras-retinanet
 
-    - name: Install lighttpd
-      apt:
-        name: lighttpd
+    - name: Install backend
+      synchronize:
+        src: ../backend/
+        dest: /home/ubuntu/backend/
 
-    - name: Install PHP7
-      apt:
-        name: [php7.0, php7.0-cgi]
+    - name: Fetching weights
+      shell: cd backend/;wget https://github.com/fizyr/keras-retinanet/releases/download/0.5.1/resnet50_coco_best_v2.1.0.h5
+
+    - name: Start backend
+      shell: cd backend/; nohup python3 main.py >log 2>err&
 
     - name: Enable PHP7 for lighttpd
       shell: lighty-enable-mod fastcgi && lighty-enable-mod fastcgi-php

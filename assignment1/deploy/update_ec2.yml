@@ -7,6 +7,6 @@
   tasks:
 
   - name: Set up assets
-    copy:
+    synchronize:
       src: ../html/
       dest: /var/www/html/
