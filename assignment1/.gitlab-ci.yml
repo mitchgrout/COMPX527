@@ -1,0 +1,57 @@
+image: "python: 3.7"
+
+before_script:
+  - python --version
+  - pip install -r requirement.txt
+
+
+stages:
+  - analyze
+  - test
+  - deploy
+
+
+pylint:
+  stage: analyze
+  allow_failure: true
+  script:
+      - pip install pylint --quiet
+      - pylint --ignored -classs=_socketobject *.py
+
+
+test:
+  stage: test
+  script:
+      - pip install nose
+      - python -m runtest xtest
+      - pip install pytest --quiet
+      - pytest
+
+trigger_gitlabci:
+  stage: deploy
+  script:
+    - "curl -X POST -F token=ec0bf085d98f4cabf5924ff1d12b6c -F ref=gitlabci https://gitlab.com/api/v4/projects/13820961/trigger/pipeline"
+
+
+trigger_master:
+  stage: deploy
+  script:
+    - "curl -X POST -F token=d25adc18488a3915603c6561f020c2 -F ref=master https://gitlab.com/api/v4/projects/13820961/trigger/pipeline"
+
+trigger_infrastructure:
+  stage: deploy
+  script:
+    - "curl -X POST -F token=8e8fe954c0513195c9b0a2bfcadf7b
+     -F ref=create_infrastructure https://gitlab.com/api/v4/projects/13820961/trigger/pipeline"
+
+
+trigger_frontend:
+  stage: deploy
+  script:
+    - "curl -X POST -F token=c490aa2235a080d2f7e120c7003e55 -F ref=Front-End https://gitlab.com/api/v4/projects/13820961/trigger/pipeline"
+
+deploy:
+  stage: deploy
+  script:
+      - echo "deploy"
+
