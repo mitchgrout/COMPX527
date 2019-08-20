@@ -63,17 +63,17 @@
         function get_info(offset)
         {
             var xmr       = new XMLHttpRequest();
-			var left      = document.getElementById("button_left");
-			var right     = document.getElementById("button_right");
+            var left      = document.getElementById("button_left");
+            var right     = document.getElementById("button_right");
             var sc_page   = document.getElementById("show_current_page");
-			var c_page    = document.getElementById("current_page");
+            var c_page    = document.getElementById("current_page");
             var page      = +c_page.value;
-			page          = Math.max(0, page+offset);
-			c_page.value  = ""+page;
-			sc_page.innerHTML = "Page "+c_page.value;
-			left.disabled = page == 0;
+            page          = Math.max(0, page+offset);
+            c_page.value  = ""+page;
+            sc_page.innerHTML = "Page "+c_page.value;
+            left.disabled = page == 0;
 
-			var idx;
+            var idx;
             for (idx = 0; idx < 25; idx++)
             {
                 document.getElementById("img_"+idx).name = "";
@@ -88,48 +88,48 @@
                 {
                     for (idx = 0; idx < 25; idx++)
                     {
-						var o  = obj["success"][idx];
-						var i  = document.getElementById("img_"+idx);
-						i.name = o["file_name"]+","+o["width"]+","+o["height"];
-						i.src  = o["coco_url"];
+                        var o  = obj["success"][idx];
+                        var i  = document.getElementById("img_"+idx);
+                        i.name = o["file_name"]+","+o["width"]+","+o["height"];
+                        i.src  = o["coco_url"];
                     }
                 }
                 else { }
             }
             xmr.open("GET", "http://<?php echo $_SERVER['SERVER_NAME']; ?>/info.php?from="+(page*25)+"&to="+((page+1)*25), true);
-			xmr.send();
+            xmr.send();
         }
 
-		function load_coco_image(idx)
-		{
-			var img    = document.getElementById("img_"+idx);
-        	var canvas = document.getElementById("draw");
-        	var ctx    = canvas.getContext("2d");
-			var parts  = img.name.split(',');
-			canvas.width  = +parts[1];
-			canvas.height = +parts[2];
-        	ctx.drawImage(img, 0, 0);
+        function load_coco_image(idx)
+        {
+            var img    = document.getElementById("img_"+idx);
+            var canvas = document.getElementById("draw");
+            var ctx    = canvas.getContext("2d");
+            var parts  = img.name.split(',');
+            canvas.width  = +parts[1];
+            canvas.height = +parts[2];
+            ctx.drawImage(img, 0, 0);
 
-			document.getElementById("image_mode").value = "coco";
-			document.getElementById("selected_idx").value = ""+idx;
-		}
+            document.getElementById("image_mode").value = "coco";
+            document.getElementById("selected_idx").value = ""+idx;
+        }
 
         function load_local_image()
         {
-			var canvas = document.getElementById("draw");
-			var url    = URL.createObjectURL(document.getElementById("file_in").files[0]);
-			var img    = new Image();
-			var ctx    = canvas.getContext("2d");
-	
-			img.onload = function()
-			{
-				canvas.width = img.width;
-				canvas.height= img.height;
-				ctx.drawImage(img, 0, 0);
-			};
-			img.src = url;
+            var canvas = document.getElementById("draw");
+            var url    = URL.createObjectURL(document.getElementById("file_in").files[0]);
+            var img    = new Image();
+            var ctx    = canvas.getContext("2d");
+    
+            img.onload = function()
+            {
+                canvas.width = img.width;
+                canvas.height= img.height;
+                ctx.drawImage(img, 0, 0);
+            };
+            img.src = url;
    
-			document.getElementById("image_mode").value = "upload";
+            document.getElementById("image_mode").value = "upload";
      }
 
         function detect()
@@ -139,43 +139,43 @@
             var canvas  = document.getElementById("draw");
             var slider  = document.getElementById("thresh");
             var results = document.getElementById("results");
-			var mode    = document.getElementById("image_mode").value;
+            var mode    = document.getElementById("image_mode").value;
 
-			if (mode == "upload")
-			{
-            	fd.append('image',  document.getElementById("file_in").files[0]);
-			}
-			else if (mode == "coco")
-			{
-				fd.append('url', document.getElementById("img_"+document.getElementById("selected_idx").value).src);
-			}
-			else { return; }
+            if (mode == "upload")
+            {
+                fd.append('image',  document.getElementById("file_in").files[0]);
+            }
+            else if (mode == "coco")
+            {
+                fd.append('url', document.getElementById("img_"+document.getElementById("selected_idx").value).src);
+            }
+            else { return; }
 
-			fd.append('thresh', slider.value);
+            fd.append('thresh', slider.value);
             xmr.onreadystatechange = function()
             {
                 if (this.readyState != 4) return;
-				alert(xmr.responseText);
+                alert(xmr.responseText);
                 results.innerHTML = xmr.responseText;
                 var obj = JSON.parse(xmr.responseText);
                 if (this.status == 200)
                 {
                     // Handle success
-					var ctx = canvas.getContext("2d");
-					var idx;
-					for (idx = 0; idx < obj['success'].length; idx++)
-					{
-						var o = obj['success'][idx];
-						ctx.lineWidth="1";
-						ctx.strokeStyle="red";
-						var x1=o['box'][0];
-						var y1=o['box'][1];
-						var x2=o['box'][2];
-						var y2=o['box'][3];
+                    var ctx = canvas.getContext("2d");
+                    var idx;
+                    for (idx = 0; idx < obj['success'].length; idx++)
+                    {
+                        var o = obj['success'][idx];
+                        ctx.lineWidth="1";
+                        ctx.strokeStyle="red";
+                        var x1=o['box'][0];
+                        var y1=o['box'][1];
+                        var x2=o['box'][2];
+                        var y2=o['box'][3];
 
-						ctx.rect(x1, y1, x1+x2, y1+y2);// + (x2-x1)/2, y1+(y2-y1)/2, x2 + (x2-x1)/2, y2);
-						ctx.stroke();
-					}
+                        ctx.rect(x1, y1, x1+x2, y1+y2);// + (x2-x1)/2, y1+(y2-y1)/2, x2 + (x2-x1)/2, y2);
+                        ctx.stroke();
+                    }
                 }
                 else { }
             };
@@ -208,9 +208,9 @@
             <div id="coco" class="tabcontent">
                 <input type="hidden" id="current_page" val="0" />
                 <button type="button" id="button_left"  onclick='get_info(-1)'>Left</button>
-				<span id="show_current_page"></span>
+                <span id="show_current_page"></span>
                 <button type="button" id="button_right" onclick='get_info(+1)'>Right</button>
-				<input type="hidden" id="selected_idx" val="0" />
+                <input type="hidden" id="selected_idx" val="0" />
 
                 <table style='width=100%'>
                     <?php
