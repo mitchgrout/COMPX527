@@ -89,6 +89,26 @@ function load_coco_image(idx)
     document.getElementById("selected_idx").value = ""+idx;
 }
 
+function load_direct_url()
+{
+    var canvas = document.getElementById("draw");
+    var url    = document.getElementById("url_in").value;
+    var ctx    = canvas.getContext("2d");
+    var img    = new Image();
+
+    img.onload = function()
+    {
+        canvas.width  = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        alert("Done");
+    };
+    alert(url);
+    img.src = url;
+
+    document.getElementById("image_mode").value = "url";
+}
+
 function load_local_image()
 {
     var canvas = document.getElementById("draw");
@@ -105,7 +125,7 @@ function load_local_image()
     img.src = url;
    
     document.getElementById("image_mode").value = "upload";
-     }
+}
 
 function detect()
 {
@@ -118,6 +138,8 @@ function detect()
 
     if (mode == "upload")
         fd.append("image",  document.getElementById("file_in").files[0]);
+    else if (mode == "url")
+        fd.append("url", document.getElementById("url_in").value);
     else if (mode == "coco")
         fd.append("url", document.getElementById("img_"+document.getElementById("selected_idx").value).src);
     else 

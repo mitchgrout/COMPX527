@@ -41,14 +41,20 @@
             <br/>
             <div style="width:50%">
                 <div class="tab">
-                    <button style="width:50%" class="tablinks" onclick="display(event, 'upload')"> Upload </button>
-                    <button style="width:50%" class="tablinks" onclick="display(event, 'coco')"> MS-COCO </button>
+                    <button style="width:33%" class="tablinks" onclick="display(event, 'upload')"> Upload </button>
+                    <button style="width:34%" class="tablinks" onclick="display(event, 'direct_url')"> URL </button>
+                    <button style="width:33%" class="tablinks" onclick="display(event, 'coco')"> MS-COCO </button>
                 </div>
         
                 <div id="upload" class="tabcontent">
                     <input type="file" id="file_in" accept="image/*" onchange="load_local_image()" /> 
                 </div>
-        
+
+                <div id="direct_url" class="tabcontent">
+                    <input type="text" id="url_in">
+                    <button onclick="load_direct_url()">Fetch</button>
+                </div>
+
                 <div id="coco" class="tabcontent">
                     <input type="hidden" id="current_page" val="0" />
                     <button type="button" id="button_left"  onclick="get_info(-1)">Prev</button>
