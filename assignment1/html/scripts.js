@@ -1,179 +1,283 @@
+// Boilerplate from our derived components
 function display(evt, tabname)
 {
-    var idx, tabcontent, tablinks, display;
-    display = document.getElementById(tabname).style.display == "block"? "none" : "block";
+    var tabcontent = document.getElementsByClassName("tabcontent"),
+        tablinks   = document.getElementsByClassName("tablinks"),
+        display    = $(tabname).style.display == "block"? "none" : "block";
 
     // Hide all tabs
-    tabcontent = document.getElementsByClassName("tabcontent");
-    for (idx = 0; idx < tabcontent.length; idx++)
-    {
+    for (var idx = 0; idx < tabcontent.length; idx++)
         tabcontent[idx].style.display = "none";
-    }
 
     // Disable all links
-    tablinks = document.getElementsByClassName("tablinks");
-    for (idx = 0; idx < tablinks.length; idx++) 
-    {
+    for (var idx = 0; idx < tablinks.length; idx++)
         tablinks[idx].className = tablinks[idx].className.replace(" active", "");
-    }
 
     // Enable/toggle the clicked link+tab
-    document.getElementById(tabname).style.display = display;
-    if (display === "block") evt.currentTarget.className += " active";
-    else evt.currentTarget.className.replace(" active", "");
+    $(tabname).style.display = display;
+    if (display == "block")
+        evt.currentTarget.className += " active";
+    else
+        evt.currentTarget.className.replace(" active", "");
 }
 
 function attach_tree_listeners()
 {
-    var idx, toggler;
-    toggler = document.getElementsByClassName("caret");
-    for (idx = 0; idx < toggler.length; idx++) {
-        toggler[idx].addEventListener("click", function() {
+    var toggler = document.getElementsByClassName("caret");
+    for (var idx = 0; idx < toggler.length; idx++)
+        toggler[idx].onclick = function()
+        {
             this.parentElement.querySelector(".nested").classList.toggle("active");
             this.classList.toggle("caret-down");
-           });
-    }
+        };
 }
 
-function get_info(offset)
-{
-    var xmr       = new XMLHttpRequest();
-    var left      = document.getElementById("button_left");
-    var right     = document.getElementById("button_right");
-    var sc_page   = document.getElementById("show_current_page");
-    var c_page    = document.getElementById("current_page");
-    var page      = +c_page.value;
-    page          = Math.max(0, page+offset);
-    c_page.value  = ""+page;
-    sc_page.innerHTML = "Page "+c_page.value;
-    left.disabled = page == 0;
+////////////////////////////////////////////////////////////////////////////////
 
-    var idx;
-    for (idx = 0; idx < 25; idx++)
+// Consts
+const DEFAULT_IMAGE_MODE   = "none";
+const DEFAULT_IMAGE_TARGET = "none";
+const DEFAULT_IMAGE_WIDTH  = 0;
+const DEFAULT_IMAGE_HEIGHT = 0;
+const DEFAULT_COCO_PAGE    = 0;
+const DEFAULT_RESULTS      = "Response: none";
+const DEFAULT_THRESHOLD    = 0.5;
+const NUM_COCO_IMAGES      = 25;
+
+// Useful temporaries
+var image_mode;   // How the target was selected
+var image_target; // A human-readable target name
+var image_width;  // Target width
+var image_height; // Target height
+var coco_page;    // The MS-COCO page we're looking at
+
+// undefined-init temporaries
+var direct_file;  // A File object [for upload]
+var direct_url;   // A URL to a remote source
+var coco_url;     // An MS-COCO URL
+var image;        // A copy of the image prior to drawing
+var ratio;        // The downscale-ratio of our image
+
+// Convenience functions
+function $(s)
+{ return document.getElementById(s); }
+
+function set_image_mode(v)
+{ return $("image_mode").innerHTML = image_mode = v; }
+
+function set_image_target(v)
+{ return $("image_target").innerHTML = image_target = v; }
+
+function set_image_width(v)
+{ return $("image_width").innerHTML = image_width = v; }
+
+function set_image_height(v)
+{ return $("image_height").innerHTML = image_height = v; }
+
+function set_coco_page(v)
+{ return $("current_page").innerHTML = coco_page = v; }
+
+function set_thresh(v)
+{ return $("thresh").value = $("show_thresh").innerHTML = v; }
+
+// Reset all values on the page
+function reset()
+{
+    // Set up the tree-view
+    attach_tree_listeners();
+    // and the associated variables
+    set_image_mode(DEFAULT_IMAGE_MODE);
+    set_image_target(DEFAULT_IMAGE_TARGET);
+    set_image_width(DEFAULT_IMAGE_WIDTH);
+    set_image_height(DEFAULT_IMAGE_HEIGHT);
+    $("results").innerHTML = DEFAULT_RESULTS;
+    direct_file = undefined;
+    direct_url  = undefined;
+    coco_url    = undefined;
+    image       = undefined;
+    ratio       = undefined;
+
+    // Load the placeholder image
+    var img    = new Image();
+    img.onload = function()
     {
-        document.getElementById("img_"+idx).name = "";
-        document.getElementById("img_"+idx).src  = "";
+        $("draw").width  = img.width;
+        $("draw").height = img.height;
+        $("draw").getContext("2d").drawImage(img, 0, 0);
     }
- 
+    img.src = "./placeholder.png";
+
+    // Reset all tab content
+    set_thresh(DEFAULT_THRESHOLD);
+    $("file_in").value = "";
+    $("url_in").value  = "";
+    set_coco_page(DEFAULT_COCO_PAGE);
+    get_info(0);
+}
+
+// Update the MS-COCO tab
+function get_info(page_offset)
+{
+    // Start by updating the current page number
+    set_coco_page(Math.max(0, coco_page + page_offset));
+    $("button_left").disabled = coco_page == 0;
+
+    // Blank out all of the image tiles
+    for (var idx = 0; idx < NUM_COCO_IMAGES; idx++)
+        $("img_"+idx).name = $("img_"+idx).src = "";
+
+    // Fetch the next NUM_COCO_IMAGES images
+    var xmr = new XMLHttpRequest();
     xmr.onreadystatechange = function()
     {
         if (this.readyState != 4) return;
+
+        // Response should always be valid JSON
         var obj = JSON.parse(xmr.responseText);
         if (obj.hasOwnProperty("success"))
         {
-            for (idx = 0; idx < 25; idx++)
+            // We should have received NUM_COCO_IMAGES values
+            // We'll be careful and clamp the response
+            for (var idx = 0; idx < Math.min(NUM_COCO_IMAGES, obj["success"].length); idx++)
             {
+                // Update the idx'th image tile
+                // Hide some useful metadata in .name
                 var o  = obj["success"][idx];
-                var i  = document.getElementById("img_"+idx);
+                var i  = $("img_"+idx);
                 i.name = o["file_name"]+","+o["width"]+","+o["height"];
                 i.src  = o["coco_url"];
             }
         }
-        else { }
+        else
+        {
+            // Error only occurs if the specified to/from values are invalid
+            document.log("An error occured while fetching COCO images: ");
+            document.log(obj);
+        }
     }
-    xmr.open("GET", "http://"+SERVER_NAME+"/info.php?from="+(page*25)+"&to="+((page+1)*25), true);
+    var from =  coco_page    * NUM_COCO_IMAGES,
+        to   = (coco_page+1) * NUM_COCO_IMAGES;
+    xmr.open("GET", "http://"+SERVER_NAME+"/info.php?from="+from+"&to="+to, true);
     xmr.send();
 }
 
-function load_coco_image(idx)
+// Helper for the load_* functions
+function set_image_info(img, mode, target)
 {
-    var img    = document.getElementById("img_"+idx);
-    var canvas = document.getElementById("draw");
-    var ctx    = canvas.getContext("2d");
-    var parts  = img.name.split(",");
-    canvas.width  = +parts[1];
-    canvas.height = +parts[2];
-    ctx.drawImage(img, 0, 0);
+    // Figure out the rescaling
+    const H = screen.height / 2,
+          W = screen.width  / 3;
+    ratio = Math.min(H / img.height, W / img.width);
+    image = img;
 
-    document.getElementById("image_mode").value = "coco";
-    document.getElementById("selected_idx").value = ""+idx;
+    // Update the necessary variables + HTML elements
+    set_image_mode(mode);
+    set_image_target(target);
+    set_image_width(img.width);
+    set_image_height(img.height);
+    $("draw").width  = img.width  * ratio;
+    $("draw").height = img.height * ratio;
+    $("draw").getContext("2d").drawImage(img, 0, 0, $("draw").width, $("draw").height);
+    $("results").innerHTML = DEFAULT_RESULTS;
 }
 
-function load_direct_url()
-{
-    var canvas = document.getElementById("draw");
-    var url    = document.getElementById("url_in").value;
-    var ctx    = canvas.getContext("2d");
-    var img    = new Image();
-
-    img.onload = function()
-    {
-        canvas.width  = img.width;
-        canvas.height = img.height;
-        ctx.drawImage(img, 0, 0);
-        alert("Done");
-    };
-    alert(url);
-    img.src = url;
-
-    document.getElementById("image_mode").value = "url";
-}
-
+// Load direct from local file
 function load_local_image()
 {
-    var canvas = document.getElementById("draw");
-    var url    = URL.createObjectURL(document.getElementById("file_in").files[0]);
-    var img    = new Image();
-    var ctx    = canvas.getContext("2d");
-    
+    // Load the file from the client, then store learnt info
+    var canvas = $("draw"),
+        file   = $("file_in").files[0],
+        url    = URL.createObjectURL(file),
+        img    = new Image();
+    $("results").innerHTML = DEFAULT_RESULTS;
     img.onload = function()
     {
-        canvas.width = img.width;
-        canvas.height= img.height;
-        ctx.drawImage(img, 0, 0);
+        set_image_info(img, "upload", file.name);
+        direct_file = file;
     };
     img.src = url;
-   
-    document.getElementById("image_mode").value = "upload";
 }
 
+// Load direct from URL
+function load_direct_url()
+{
+    // Fetch the remote image, then store learnt info
+    var url    = $("url_in").value,
+        canvas = $("draw"),
+        img    = new Image();
+    $("results").innerHTML = DEFAULT_RESULTS;
+    img.onload = function()
+    {
+        set_image_info(img, "url", url);
+        direct_url = url;
+    };
+    img.src = url;
+}
+
+// Load a clicked COCO image
+function load_coco_image(idx)
+{
+    // All we need to do is copy the clicked tile info across
+    // However, we can't directly use that image due to
+    // the element being reused across pages
+    var img    = new Image(), // $("img_"+idx),
+        parts  = $("img_"+idx).name.split(","),
+        canvas = $("draw");
+    // NOTE: Doing it this way is unnecessary but is the same code as before
+    img.onload = function()
+    {
+        set_image_info(img, "coco", img.src);
+        coco_url = img.src;
+    }
+    img.src = $("img_"+idx).src;
+}
+
+// Send the selected file off to the backend and output results
 function detect()
 {
+    // Set up our POST arguments
+    var fd = new FormData();
+    fd.append("thresh", $("thresh").value);
+    switch (image_mode)
+    {
+        case "upload": fd.append("image", direct_file); break;
+        case "url":    fd.append("url",   direct_url);  break;
+        case "coco":   fd.append("url",   coco_url);    break;
+        // We will never hit the default case
+    }
+
     var xmr     = new XMLHttpRequest();
-    var fd      = new FormData();
-    var canvas  = document.getElementById("draw");
-    var slider  = document.getElementById("thresh");
-    var results = document.getElementById("results");
-    var mode    = document.getElementById("image_mode").value;
-
-    if (mode == "upload")
-        fd.append("image",  document.getElementById("file_in").files[0]);
-    else if (mode == "url")
-        fd.append("url", document.getElementById("url_in").value);
-    else if (mode == "coco")
-        fd.append("url", document.getElementById("img_"+document.getElementById("selected_idx").value).src);
-    else 
-        return;
-    fd.append("thresh", slider.value);
-    results.innerHTML = "Processing...";
-
+    var ctx     = $("draw").getContext("2d");
+    var results = $("results");
     xmr.onreadystatechange = function()
     {
         if (this.readyState != 4) return;
+
+        // Response should always be valid JSON
         var obj = JSON.parse(xmr.responseText);
+
+        // Redraw the image [covers the case when we are re-analysing]
+        ctx.drawImage(image, 0, 0, image.width*ratio, image.height*ratio);
         if (obj.hasOwnProperty("error"))
         {
-            results.innerHTML = 
-             '<li>'
-            +' <span class="caret">Error</span>'
-            +' <ul class="nested">'
-            +'  <li>'
-            +    'Message: ' + obj["error"]
-            +'  </li>'
-            +' </ul>'
-            +'</li>';
+            // On failure, set response to error message
+            results.innerHTML =
+             '<span class="caret">Response: error</span>'
+            +'<ul class="nested">'
+            +' <li>'
+            +   'Message: ' + obj["error"]
+            +' </li>'
+            +'</ul>';
         }
         else
         {
-            // Handle success
-            var idx, ctx, res;
-            ctx = canvas.getContext("2d");
-        
-            res =
-             '<li>'
-            +' <span class="caret">Success ('+obj["success"].length+')</span>'
-            +' <ul class="nested">';
-            for (idx = 0; idx < obj["success"].length; idx++)
+            // On success, render the results
+            var res =
+             '<span class="caret">Response: success ('+obj["success"].length+' detections)</span>'
+            +'<ul class="nested">';
+            ctx.beginPath();
+            ctx.scale(ratio, ratio);
+            for (var idx = 0; idx < obj["success"].length; idx++)
             {
                 var o = obj["success"][idx],
                     label = o["label"],
@@ -187,12 +291,12 @@ function detect()
                 ctx.strokeStyle = "red";
                 ctx.fillStyle   = "red";
                 ctx.rect(x1, y1, x2-x1, y2-y1);
-                ctx.fillRect(x1, y2, x2-x1, 15);
+                ctx.fillRect(x1, y2, x2-x1, 20);
                 ctx.stroke();
 
                 ctx.fillStyle   = "white";
-                   ctx.font        = "10px Arial";
-                ctx.fillText(label + ": " + score, x1, y2+10);
+                ctx.font        = "15px Arial";
+                ctx.fillText(label + ": " + score, x1, y2+12);
                 ctx.stroke();
 
                 res +=
@@ -201,7 +305,7 @@ function detect()
                 +' <ul class="nested">'
                 +'  <li>Label: ' + label + '</li>'
                 +'  <li>Score: ' + score + '</li>'
-                +'  <li>'    
+                +'  <li>'
                 +'   <span class="caret">Box</span>'
                 +'   <ul class="nested">'
                 +'    <li>x1: ' + x1 + '</li>'
@@ -213,13 +317,15 @@ function detect()
                 +' </ul>'
                 +'</li>';
             }
-            res +=
-             ' </ul>'
-            +'</li>';
+            // Annoyingly we have to undo the scale
+            ctx.scale(1/ratio, 1/ratio);
+            res += '</ul>';
             results.innerHTML = res;
         }
         attach_tree_listeners();
+        $("thresh").disabled = $("reset").disabled = $("detect").disabled = false;
     };
+    $("thresh").disabled = $("reset").disabled = $("detect").disabled = true;
     xmr.open("POST", "http://"+SERVER_NAME+"/detect.php", true);
     xmr.send(fd);
 }
