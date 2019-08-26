@@ -75,11 +75,10 @@ def detect_image():
         draw   = image.copy()
         image  = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
         image  = preprocess_image(image)
-        image, scale = resize_image(image)
+        image, _ = resize_image(image)
 
         with graph.as_default():
             [boxes], [scores], [labels] = model.predict_on_batch(numpy.expand_dims(draw, axis=0))
-        boxes /= scale
 
         results = []
         for box, score, label in zip(boxes, scores, labels):
