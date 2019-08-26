@@ -22,6 +22,12 @@
   Hamilton, New Zealand\\
   \texttt{sl302@students.waikato.ac.nz}}
   \and
+\IEEEauthorblockN{Sunny Chikara}
+\IEEEauthorblockA{Department of Computer Science\\
+  \textit{University of Waikato}\\
+  Hamilton, New Zealand\\
+  \texttt{sc420@students.waikato.ac.nz}}
+  \and
 \IEEEauthorblockN{YingJun Huang}
 \IEEEauthorblockA{Department of Computer Science\\
   \textit{University of Waikato}\\
@@ -33,13 +39,13 @@
 \maketitle
 
 \begin{abstract}
-Abstract Text
+We designed an Object Detection web service on the AWS Cloud Provider, using Terraform for programmable infrastrucure, Ansible for deployment, and Python for the web service and object detection.
 \end{abstract}
 \begin{IEEEkeywords}
 AWS, COMPX527, Terraform, Ansible, Flask, Python, Object Detection, Retinanet
 \end{IEEEkeywords}
 \section{Solution Summary}
-Solution Summary
+The Flask Object Detection service is a load balanced HTTP service deployed in AWS EC2, using the AWS ELB load balancer. The service can accept a JPG image and run object detection on it, and returns the resulting image with identified objects highlighted.
 \section{Motivation}
 We decided on object detection in the cloud in order to learn and appricate the challenges of providing a stateless, scalbale service that could be used for a variey of other projects. Examples included
 \begin{itemize}
@@ -48,12 +54,13 @@ We decided on object detection in the cloud in order to learn and appricate the 
 \item Absence detection, indetifying objects that should be in an image but are not
 \end{itemize}
 \section{Proposed Solution}
-An Amazon Web Services based cluster of web servers taking images from clients and returning images with bionding boxed indetified objects plus json formatted data, behind an Eleastic Load Balancer. The cluster will be horizontally scalable by adding web servers, and accessable via curl or any other HTTP client that can perform HTTP POST requests.
+An Amazon Web Services based cluster of web servers taking images from clients and returning images with bionding boxed indetified objects plus json formatted data, behind an Eleastic Load Balancer. The cluster will be horizontally scalable by adding web servers, and accessable via curl or any other HTTP client that can perform HTTP POST requests. It was trained used the AWS COCO data set \footnote{https://registry.opendata.aws/fast-ai-coco/}, and also used the set to for testing and demonstrations. 
 \section{Solution Architecture}
 We decided to use a load balanced web service architecture, a very common and well understood model with common solutions to scalability and uptime. We have the following components and features:
 \subsection{The Image Processing Server}
 The project uses the Retinanet based Object Detection developed by Keras
-\footnote{https://github.com/fizyr/keras-retinanet}. The web service was developed in Python using a Flask server \footnote{https://pypi.org/project/Flask/}.
+\footnote{https://github.com/fizyr/keras-retinanet}. The web service was developed in Python using a Flask server \footnote{https://pypi.org/project/Flask/}.\par
+The server recives via HTTP JPG formatted image, and returns the image with bounding boxes around identified objects, plus JSON data of the images.
 \subsection{The Load Balancer}
 The object detection being inhernetly slow forces the use of laod balancing and scaling techniques. Using the AWS Elastic Load Balancer allowed us balance the HTTP requests over two or more EC2 servers running the Flask servers. We could create as many Flask servers as we wished, although of course this lent itself to waisted compute resources. Though we had great sucess early on using AWS AutoScaling Groups, which allows a lower and upper limit of EC2 instances running our Flask server to be defined, this functionality was not avalible in the student accounts.
 \subsection{The Web User Interface}
@@ -90,6 +97,8 @@ Though Terraform is capable of running commands post-install in order to install
 We used github for source control of all documents and code. This was chosen over other solutions suc h as SVN and Mecurial due to the familiarity of some of the team members with git. Others in our team have leanrt cloning, pulling and branching. \footnote{https://github.com/}
 \subsection{Slack}
 As we needed to communicate effectively over a period of weeks without seeing each other often, we decided to use the colloberation software Slack \footnote{https://slack.com/}. We used a free account, and created a channel to allow us to privately communicate about our work. It was used extensively and allowed constant effecteive communication.
+\subsection{Trello}
+In ordr to break up and manage tasks we created a Kanban Board in Trello \footnote{https://trello.com/}. This got us started with basic learning and setup tasks early on, but as the project progressed we tended to move to the use of Slack to define and assign tasks and workloads.
 \subsection{LaTex}
 LaTex \footnote{https://www.latex-project.org/} is the accepted standard for scientific papers; therefore although the assignment pointed us to the IEEE A4 standard for reporting, we opted to use the LaTex standard. This gave us very useful experince in using LaTex for proper report formatting.
 This report was created in LaTex using the IEEEtran document class provided by IEEE template avaliable at
@@ -119,10 +128,14 @@ Mitigation can be using good protection practices for authentication information
 The Flask servers are publically accessable via SSH, needed for deployment. If the key pair is compromised or the keys obtained then root access to the Flask servers cloud be obtained. This would grant the attacker full acccess and the ability to use the server's resources for there own purposes. \par
 Migragtion can be using ssh key passwords, encrypted storage of the keys, checking server hashes, and keeping ssh software up to date with security patches.
 \subsection{Network Security}
-Network Security
+We used AWS Security Groups to restrict the Load Balancer to only ingress traffic port 80. The Image Processers restricted to port 22 and 80. \par
+Allowing direct access to the service port is a known problem that could allow an attaacker to easily DDOS a single server, bypassing the Load Balancer. To mitigate this we need to work out how to define the CIDR range in the security group to match the internal IP of the Load Balancer.
+The service is load banced, but we where not able to use AutoScaling Groups due to our account restrictions. This results in having to manually create additional servers to cope with increased requests, and so a DDOS would be more effective since a human will have to respond to any such attack.\par
+To mitigate this we should move to an account that allows the use of Auto Scaling Groups.  
 \subsection{Monitoring and Security}
 AWS EC2 instance monitoring was enabled during the terraform creation of the cluster. ELB monitors the avalibility of the Flask HTTP servers. The lack of external monitoring means that we are totally dependent on AWS for security checks and uptime monitoring. \par
 Mitigation of the lack of monitoring is obviousloy acheived by using both in house and monitoring services. Common examples of in house monioring is via Nagios, Icinga2, Munin and Promethues. Monitoring services include Uptime.com \footnote{https://uptime.com/uptime-monitoring} for ping and HTTP monitoring, and Paessler \footnote{https://www.paessler.com/port\_monitoring}, which provides addiotnal services such as port monitoring.
+
 \section{Actual AWS Expenditure}
 TODO
 \section{Future Improvements}
@@ -139,11 +152,13 @@ Future development of the cluster would likely use additional monitoring of perf
 We would also start to use third party external monitoring services such as Uptime.com \footnote{https://uptime.com/uptime-monitoring} or Paessler \footnote{https://www.paessler.com/}
 \section{Team Members Contributions}
 \section{Assignment Requirements Completion}
-The requirements for this Assignment were communicated in serveral ways, including the assignment documentation, messages in the Moodle channel, the lectures, and by asking the lectuerer and asistant directly. The following is what we have determine dto be the requirements, and how we have achived each one.
+The requirements for this Assignment were communicated in serveral ways, including the assignment documentation, messages in the Moodle channel, the lectures, and by asking the lectuerer and asistant directly. We treated these as customer reuirements, which typically start with a good understanding of the desired outcomes and often require feedback from the customer to ensure we are achiving them.\par
+The following is what we have determine dto be the requirements, and how we have achived each one.
 \begin{itemize}
-  \item AWS Mashup
+  \item Use of AWS to create a non-trivial service, demonstrating our understanding of cloud technologies, their use, and their challenges.
+  \item Use of technologies such as Terraform, Ansible and Cloud Formation for programmably defined infrastructure and depoyments
+  \item Use of a open dataset from AWS
+  \item Work within a team with very diverse technical backgrounds and manage them to ensure fair distribution of the work.
 \end{itemize}
-\section{Standards}
-
 .
 \end{document}
