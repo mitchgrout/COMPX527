@@ -106,7 +106,7 @@ Deployment scripts were chosen for deployment and running the services. However,
 \paragraph{Service Management}
 Currently the starting and stopping of the service is done via control scripts. These would be integrated in to systemd service management \footnote{https://wiki.debian.org/systemd}.
 \paragraph{HTTP}
-The service is stateless, plublic and insecure. If a layer of security is desired to protect the data in transit, then HTTPS can be added to the Elastic Load Balancer via the AWS Certificate Manager \footnote{https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/ssl-server-cert.html}.
+The service is stateless, plublic and insecure. If a layer of security is desired to protect the data in transit, then HTTPS can be added to the Elastic Load Balancer via the AWS Certificate Manager \footnote{https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/ssl-server-cert.html}. The simple reason for not using this was cost: we would have to pay for extra services when our budget was tight.
 \section{Team Members Contributions}
 \section{Assignment Requirements Completion}
 \section{Standards}
