@@ -11,7 +11,7 @@ resource "aws_instance" "ec2_instances" {
     # ubuntu-xenial-16.04-amd64-server-20190605
     # TODO: Use custom AMI?
     ami           = "ami-01d9d5f6cecc31f85"
-    instance_type = "t2.2xlarge"
+    instance_type = "t2.medium"
 
     # Hook up SSH key and configure ports
     key_name        = aws_key_pair.deployer.key_name 
@@ -55,6 +55,14 @@ resource "aws_elb" "load_balancer"{
         interval            = 5
         target              = "TCP:${var.server_port}"
     }
+}
+
+# Attach a stickiness policy to help reduce abuse
+resource "aws_lb_cookie_stickiness_policy" "load_balancer_sticky" {
+    name                     = "lb-sticky-policy" 
+    load_balancer            = "${aws_elb.load_balancer.id}"
+    lb_port                  = 80
+    cookie_expiration_period = 300
 }
 
 # Attach our instances
