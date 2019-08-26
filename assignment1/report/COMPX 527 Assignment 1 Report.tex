@@ -36,7 +36,7 @@
 Abstract Text
 \end{abstract}
 \begin{IEEEkeywords}
-AWS, COMPX527
+AWS, COMPX527, Terraform, Ansible, Flask, Python, Object Detection, Retinanet
 \end{IEEEkeywords}
 \section{Solution Summary}
 Solution Summary
@@ -48,33 +48,35 @@ We decided on object detection in the cloud in order to learn and appricate the 
 \item Absence detection, indetifying objects that should be in an image but are not
 \end{itemize}
 \section{Proposed Solution}
-In order to 
+An Amazon Web Services based cluster of web servers taking images from clients and returning images with bionding boxed indetified objects plus json formatted data, behind an Eleastic Load Balancer. The cluster will be horizontally scalable by adding web servers, and accessable via curl or any other HTTP client that can perform HTTP POST requests.
 \section{Solution Architecture}
-Solution Architecture
+We decided to use a load balanced web service architecture, a very common and well understood model with common solutions to scalability and uptime. We have the following components and features:
 \subsection{The Image Processing Server}
 The project uses the Retinanet based Object Detection developed by Keras
-\footnote{https://github.com/fizyr/keras-retinanet}. The web service was developed in Pythion using a Flask server \footnote{https://pypi.org/project/Flask/}.
+\footnote{https://github.com/fizyr/keras-retinanet}. The web service was developed in Python using a Flask server \footnote{https://pypi.org/project/Flask/}.
 \subsection{The Load Balancer}
-The object detection being inhernetly slow forces the use of laod balancing and scaling techniques. Using the AWS Elastic Load Balancer allowed us balance the HTTP requests over two or more EC2 servers running the Flask servers. We could create as many Flask servers as we wished, although of course this lent itself to waisted compute resources. Though we had great sucess using AWS AutoScaling Groups, which allows a lower and upper limit of EC2 instances running our Flask server to be defined, this functionality was not avalible in the student accounts.
+The object detection being inhernetly slow forces the use of laod balancing and scaling techniques. Using the AWS Elastic Load Balancer allowed us balance the HTTP requests over two or more EC2 servers running the Flask servers. We could create as many Flask servers as we wished, although of course this lent itself to waisted compute resources. Though we had great sucess early on using AWS AutoScaling Groups, which allows a lower and upper limit of EC2 instances running our Flask server to be defined, this functionality was not avalible in the student accounts.
 \subsection{The Web User Interface}
 In order to have a better demo, it was decided to go ahead and produce a web site interface that would allow uploading 
 \subsection{The Web API}
 The intended standard way to interact with the Flask Object Detection Cluster is to access it via HTTP calls using the url http://\textless load\_balancer\_fqdn\textgreater/detect. As the system is inteneded for the use of non-private images no ssl was implemented on the load balancer, though it is supported.
-The code submitted for this project includes \textit{simple\_upload.py} and \textit{forked\_upload.py}, which are Python 3 examples for using the HTTP API.
+\subsection{Amazon Web Services Cloud}
+The service running on the Amazon Web Services Cloud, the required choice of the assignment. Though later in lectures there it wa smentioned we could look in to using other Cloud Service Providers, we decied we had already made enough progress to commit ourselves to AWS for this project. Though we did use terraform, which supports IaaS deployments with mulitple CSP, in case we had a need to effect a change quickly.
 \section{Development}
 \subsection{Technology}
+The following are the significant technologies we used in this assignment.
 \paragraph{Retinanet}
-Retinanet is an open source object detection neural net. This technology was chosen for the following reasons.
+Retinanet is an open source object detection neural net. This technology was chosen for the following reasons \footnote{}.
 \begin{itemize}
-\item Open Source
-\item Python 3 for rapid development
+\item Free Open Source project obviously beneficial for a project with a limited budget.
+\item Python 3 for rapid development and deploymewnt. With a mix of experinced and less experinced team members this was particulary useful.
 \item Specific instructions using it with the dataset avaliable on the Registry of Open Data on AWS \footnote{https://registry.opendata.aws/fast-ai-coco/}
 \end{itemize}
 \paragraph{Terraform}
 Terraform was given in as an example of the provisioning service to use in this assignment. AWS CloudFormation was another option suggested. The decision to go with terraform rather than CloudFormation was based on the following
 \begin{itemize}
-  \item CloudFormation is prioritory and is specific to AWS cloud offierings TODOREF. Though this assigmnet is on a small and temporty scale, we still not want to use a technology that would create vendor lockin
-  \item Terraform supports provisioning many different platforms, both open source stand priopritary, such as Azure, Goolge Cloud, Kubernetes and OpenStack \footnote{https://aws.amazon.com/cloudformation/}. Developng expericne in deployments with terraform therefore was demied to be more useful.
+  \item CloudFormation is prioritory and is specific to AWS cloud offierings. Though this assigmnet is on a small and temporty scale, we still not want to use a technology that would create vendor lockin
+  \item Terraform supports provisioning many different platforms, both open standards and priopritary, such as Azure, Goolge Cloud, Kubernetes and OpenStack \footnote{https://aws.amazon.com/cloudformation/}. Developng expericne in deployments with terraform therefore was demied to be more useful.
 \end{itemize}
 \paragraph{Ansible}
 Though Terraform is capable of running commands post-install in order to install services and other software needed for our cluster, our cluster used Ansible playbooks instead. Though it meant learning another technology, we demeed a good use of our time since:
@@ -83,21 +85,42 @@ Though Terraform is capable of running commands post-install in order to install
   \item Ansible's langauge is very flxible and is created specifally for the purpose of delpoymnet.
   \item This is a recommended approach by HashiCorp, the devlopers of Terraform. \footnote{https://www.hashicorp.com/resources/ansible-terraform-better-together}
 \end{itemize}
+
+\paragraph{Github}
+We used github for source control of all documents and code. This was chosen over other solutions suc h as SVN and Mecurial due to the familiarity of some of the team members with git. Others in our team have leanrt cloning, pulling and branching. \footnote{https://github.com/}
+\paragraph{Slack}
+As we needed to communicate effectively over a period of weeks without seeing each other often, we decided to use the colloberation software Slack \footnote{https://slack.com/}. We used a free account, and created a channel to allow us to privately communicate about our work. It was used extensively and allowed constant effecteive communication.
+\paragraph{LaTex}
+LaTex \footnote{https://www.latex-project.org/} is the accepted standard for scientific papers; therefore although the assignment pointed us to the IEEE A4 standard for reporting, we opted to use the LaTex standard. This gave us very useful experince in using LaTex for proper report formatting.
+This report was created in LaTex using the IEEEtran document class provided by IEEE template avaliable at
+\footnote{https://www.ieee.org/conferences/publishing/templates.html}
+, and generated into PDF by Gnome LaTeX
+\footnote{https://wiki.gnome.org/Apps/GNOME-LaTeX}
 \paragraph{Flask}
 The decision to develop and depoly a service using the keras-retinanet Python library immediately suggested to us we should again use Python to provide the web service. Our team had develpoers with experince in both Tornado and Flask; Flask was used as the web service development fell on the person with Flask experince. Both solutions would have been suitable.
-\subsection{Compairsion with existing object detection soltutions}
-Amazon Rekognition
-\section{Security Assessment}
-Security Assessment
+\subsection{Existing object detection soltutions}
+There is a wide range of cloud and non cloud solutions. Those provided by the large Cloud Providers includes:
+\paragraph{Rekognition}
+Amazon's object detection solution \footnote{https://aws.amazon.com/rekognition/}.
+\paragraph{Vision AI}
+Google's object detection solution \footnote{https://cloud.google.com/vision/}.
+\paragraph{Computer Vision}
+Microsofts object detection solution \footnote{https://azure.microsoft.com/en-us/services/\\cognitive-services/computer-vision/}.
+
+\section{Security and Vunlerability Assessment}
 \subsection{Data Security}
-The Flask Object Detection Cluster was specifically created to be stateless and public. Interception of HTTP requests and results can be easily interceptied by third parties with access to the networks between the client and the service.
+The Flask Object Detection Cluster was specifically created to be stateless and public. Interception of HTTP requests and results can be easily interceptied by third parties with access to the networks between the client and the service. Users of the service should be aware that any images sent or data recived from the service could be illictly obtained, mallicously modified, or corrupted in transit.
 \subsection{Access Security}
-Access Security
+\paragraph{Identity and Access Management}
+Management access of the resources residing on AWS is protected via the AWS Identity and Access Management (IAM) system \footnote{https://docs.aws.amazon.com/IAM/latest/UserGuide/introduction.html}. We used individual accounts provided by the course. If an account was compromised the it would allow malicous actors to shut down services, or replace the current services with malacoius alternatives. For example, they cloud replace an instance with one that will return malware embeded in an image.
+\paragraph{Mitigation}
+Good protection practices for authentication information, Two Factor Auth (2FA), regular monitoring of the service with a set of well known HTTP requests checked against expected results.
+\paragraph{Server Access}
+The Flask servers are publically accessable via SSH, needed for deployment. If the key pair is compromised or the keys obtained then root access to the Flask servers cloud be obtained. This would grant the attacker full acccess and the ability to use the server's resources for there own purposes.
 \subsection{Network Security}
 Network Security
-\subsection{Vulnerability Assessment}
 \subsection{Monitoring}
-AWS EC2 instance monitoring was enabled during the terraform creation of the cluster. Future development of the cluster would likely use additional monitoring of performance, costs and uptimes using dedicated EC2 instances, and such existing monitoring systems as Icinga, Promethues and Munin. Uptime moniroing would of nessescity be run etxernally, such as on internal machines or another cloud providers offering.
+AWS EC2 instance monitoring was enabled during the terraform creation of the cluster. ELB monitors the avalibility of the Flask HTTP servers.
 \section{Actual AWS Expenditure}
 TODO
 \section{Future Improvements}
@@ -106,13 +129,14 @@ Deployment scripts were chosen for deployment and running the services. However,
 \paragraph{Service Management}
 Currently the starting and stopping of the service is done via control scripts. These would be integrated in to systemd service management \footnote{https://wiki.debian.org/systemd}.
 \paragraph{HTTP}
-The service is stateless, plublic and insecure. If a layer of security is desired to protect the data in transit, then HTTPS can be added to the Elastic Load Balancer via the AWS Certificate Manager \footnote{https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/ssl-server-cert.html}. The simple reason for not using this was cost: we would have to pay for extra services when our budget was tight.
+The service is stateless, plublic and insecure. If a layer of security is desired to protect the data in transit, then HTTPS can be added to the Elastic Load Balancer via the AWS Certificate Manager \footnote{https://docs.aws.amazon.com/elasticloadbalancing\\/latest/classic/ssl-server-cert.html}. The simple reason for not using this was cost: we would have to pay for extra services when our budget was tight.
+\paragraph{Cloudflare Multi Region Load Balancing}
+Redeployment of the service changes the FQDN in the URL. Also, the service is currenlty deployed on only one region. The Cloudflare Load Balancing would allow the use of many regions or in fact many Cloud Providers to be used with a single contant url presented to the send consumer. The fact that the service is stateless makes it very suitable to this form of scale out \footnote{https://www.cloudflare.com/load-balancing/}
+\paragraph{Monitoring}
+Future development of the cluster would likely use additional monitoring of performance, costs and uptimes using dedicated EC2 instances, and such existing monitoring systems as Icinga, Promethues and Munin. Uptime moniroing would of nessescity be run etxernally, such as on internal machines or another cloud providers offering.
 \section{Team Members Contributions}
 \section{Assignment Requirements Completion}
 \section{Standards}
-This report was created in LaTex using the IEEEtran document class provided by IEEE template avaliable at
-\footnote{https://www.ieee.org/conferences/publishing/templates.html}
-, and generated into PDF by Gnome LaTeX
-\footnote{https://wiki.gnome.org/Apps/GNOME-LaTeX}
+
 .
 \end{document}
