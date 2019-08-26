@@ -88,14 +88,13 @@ Though Terraform is capable of running commands post-install in order to install
   \item This is a recommended approach by HashiCorp, the devlopers of Terraform. \footnote{https://www.hashicorp.com/resources/ansible-terraform-better-together}
 \end{itemize}
 \paragraph{Docker}
-\subsection{Future Improvements}
-
+Darknet and Darknet Server are in active development and therefore potentially unsrtanble. In order to create a stable service that could be deployed easily we chose Docker containers to package together the different software. \footnote{https://www.docker.com/resources/what-container}. We could have alternatively created custom installtion/deployment scripts or generated OS packages such as dpkg and rpm \footnote{https://www.tecmint.com/linux-package-management/}. However part of the flexibility of Docker is that we could deploy it on multiple different platforms if the need arose, and we found setting up the Dockerfile was a straight forward process for our needs.
 \subsection{Compairsion with existing object detection soltutions}
 Amazon Rekognition
 \section{Security Assessment}
 Security Assessment
 \subsection{Data Security}
-Data Security
+The Darknet Object Detection Cluster was specifically created to be stateless and public. Interception of HTTP requests and results can be easily interceptied by third parties with access to the networks between the client and the service.
 \subsection{Access Security}
 Access Security
 \subsection{Network Security}
@@ -105,9 +104,14 @@ Network Security
 AWS EC2 instance monitoring was enabled during the terraform creation of the cluster. Future development of the cluster would likely use additional monitoring of performance, costs and uptimes using dedicated EC2 instances, and such existing monitoring systems as Icinga, Promethues and Munin. Uptime moniroing would of nessescity be run etxernally, such as on internal machines or another cloud providers offering.
 \section{Actual AWS Expenditure}
 TODO
+\section{Future Improvements}
+\paragraph{Docker}
+Docker was chosen for simplicity and flexibility; however, if the product was to be further developed it would benefit being deployed as dpkg or rpm with proper dependencies from its own repository, allowing for both easier installtion and updates.
+\paragraph{HTTP}
+The service is stateless, plublic and insecure. If a layer of security is desired to protect the data in transit, then HTTPS can be added to the Elastic Load Balancer via the AWS Certificate Manager \footnote{https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/ssl-server-cert.html}.
 \section{Team Members Contributions}
 \section{Assignment Requirements Completion}
-\section{Acknowledgment}
+\section{Standards}
 This report was created in LaTex using the IEEEtran document class provided by IEEE template avaliable at
 \footnote{https://www.ieee.org/conferences/publishing/templates.html}
 , and generated into PDF by Gnome LaTeX
