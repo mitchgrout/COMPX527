@@ -18,12 +18,25 @@ with open('image_info_test2017.json', 'r') as fd:
         info.append({name:elem[name] for name in ['file_name', 'coco_url', 'width', 'height']})
 
 # Set up Flask
-from flask import Flask, request, jsonify
+from flask              import Flask, request, jsonify
+from flask_limiter      import Limiter
+from flask_limiter.util import get_remote_address
 app = Flask(__name__)
+lim = Limiter(app, key_func=get_remote_address)
 j   = jsonify
+
+# Custom ratelimiter
+@app.errorhandler(429)
+def ratelimiter(e):
+    return j({ 'error': 'rate limited' }), 200
+
+# Custom exemption for testing
+def exemption():
+    return "no_limiter" in request.values
 
 # Hook up a route for POST /detect
 @app.route('/detect', methods=['POST'])
+@lim.limit("1/second;5/minute;25/hour", exempt_when=exemption)
 def detect_image():
     # Fetch and validate the thresh value
     thresh = 0.5
@@ -95,6 +108,7 @@ def detect_image():
         # TODO: Try to reduce this?
 
 @app.route('/info', methods=['GET'])
+@lim.limit("10/second", exempt_when=exemption)
 def get_coco_info():
     # Parse the from/to params
     fr = None

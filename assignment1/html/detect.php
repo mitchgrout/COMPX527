@@ -2,7 +2,7 @@
 
 # Init a curl connection to the original server
 $ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, 'http://'.$_SERVER['SERVER_ADDR'].':8080/detect');
+curl_setopt($ch, CURLOPT_URL, 'http://127.0.0.1:8080/detect');
 curl_setopt($ch, CURLOPT_POST, 1);
 $post = array();
 
