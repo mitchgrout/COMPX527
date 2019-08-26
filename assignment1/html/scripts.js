@@ -243,7 +243,7 @@ function detect()
         case "upload": fd.append("image", direct_file); break;
         case "url":    fd.append("url",   direct_url);  break;
         case "coco":   fd.append("url",   coco_url);    break;
-        // We will never hit the default case
+        default: return;
     }
 
     var xmr     = new XMLHttpRequest();
