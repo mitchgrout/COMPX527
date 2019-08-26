@@ -1,0 +1,6 @@
+# virtualenv
+bin/
+lib/
+usr/
+include/
+.idea
