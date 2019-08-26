@@ -31,18 +31,18 @@ def detect_image():
         try:
             thresh = float(request.values['thresh'])
         except (ValueError, TypeError):
-            return j({ 'error': 'thresh was not a float' }), 400
+            return j({ 'error': 'thresh was not a float' })
     if thresh < 0.0:
-        return j({ 'error': '<0 threshold supplied' }), 400
+        return j({ 'error': '<0 threshold supplied' })
     elif thresh > 1.0:
-        return j({ 'error': '>1 threshhold supplied' }), 400
+        return j({ 'error': '>1 threshhold supplied' })
         
     # Fetch the image; this can be passed either as an uploaded image OR URL
     # NOTE: For sanity we only accept <2MB images
     if 'image' in request.files:
         stream = request.files['image'].stream.read(2 * 1024 * 1024)
         if len(request.files['image'].stream.read(1)):
-            return j({ 'error': 'input images are restricted to 2MB' }), 400
+            return j({ 'error': 'input images are restricted to 2MB' })
     elif 'url' in request.values:
         from requests import get
         resp = get(request.values['url'], stream=True)
@@ -50,12 +50,12 @@ def detect_image():
         read_chunk = False
         for chunk in resp.iter_content(2 * 1024 * 1024):
             if read_chunk:
-                return j({ 'error': 'input images are restricted to 2MB' }), 400
+                return j({ 'error': 'input images are restricted to 2MB' })
             by += chunk
             read_chunk = True
         stream = bytes(by)
     else:
-        return j({ 'error': 'no image supplied' }), 400
+        return j({ 'error': 'no image supplied' })
 
    # Try to parse the image
     image = None
@@ -65,7 +65,7 @@ def detect_image():
         from PIL import Image
         image = numpy.array(Image.open(BytesIO(stream)).convert('RGB'))
     except OSError as e:
-        return j({ 'error': 'could not parse image' }), 400
+        return j({ 'error': 'could not parse image' })
         
     # Everything from here *should be* safe, but we'll wrap it just in case
     try:
@@ -88,10 +88,10 @@ def detect_image():
             results.append({ 'score': float(score)
                            , 'label': label_map[label]
                            , 'box'  : [float(p) for p in box] })
-        return j({ 'success': results }), 200
+        return j({ 'success': results })
 
     except Exception as e:
-        return j({ 'error': 'fatal error: {} {}'.format(type(e), e) }), 500
+        return j({ 'error': 'fatal error: {} {}'.format(type(e), e) })
         # TODO: Try to reduce this?
 
 @app.route('/info', methods=['GET'])
@@ -104,16 +104,16 @@ def get_coco_info():
             fr = int(request.args['from'])
             fr = max(fr, 0)
         except (ValueError, TypeError):
-            return j({ 'error': 'from must be an integer' }), 400
+            return j({ 'error': 'from must be an integer' })
     if 'to' in request.args:
         try:
             to = int(request.args['to'])
             to = max(to, 0)
         except (ValueError, TypeError):
-            return j({ 'error': 'to must be an integer' }), 400
+            return j({ 'error': 'to must be an integer' })
 
     # Slice the pre-loaded info 
-    return j({ 'success': info[fr:to] }), 200
+    return j({ 'success': info[fr:to] })
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)
