@@ -46,7 +46,7 @@
 
     - name: Fetch Pip dependencies
       pip:
-        name: [flask, numpy, keras, tensorflow] 
+        name: [flask, flask_limiter, numpy, keras, tensorflow] 
 
     - name: Install keras_retinanet
       pip:

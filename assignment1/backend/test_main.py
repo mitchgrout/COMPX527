@@ -6,11 +6,11 @@ import json
 def detect(img=None, thresh=None):
     data  = {} if thresh is None else {'thresh':thresh}
     files = {} if img    is None else {'image': img}
-    return requests.post('http://127.0.0.1:8080/detect', files=files, data=data)
+    return requests.post('http://127.0.0.1:8080/detect?no_limiter', files=files, data=data)
 
 # Wrapper for GET /info
 def info():
-    return requests.get('http://127.0.0.1:8080/info')
+    return requests.get('http://127.0.0.1:8080/info?no_limiter')
 
 # Loads the file for the given input tag
 def test_file(tag):
@@ -20,13 +20,12 @@ def test_file(tag):
 # Determine if an HTTP response is an error
 def is_error(response):
     obj = json.loads(response.text)
-    return response.status_code != 200 and 'error' in obj
+    return response.status_code == 200 and 'error' in obj
 
 # Determine if an HTTP response is successful
 def is_success(response):
     obj = json.loads(response.text)
     return response.status_code == 200 and 'success' in obj
-
 
 class WebTest(unittest.TestCase):
     # Thresh should be in float [0,1]
