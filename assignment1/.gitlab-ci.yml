@@ -4,54 +4,29 @@ variables:
   GIT_DEPTH: "30"
   PROJECT_DIR: "assignment1"
 
-before_script:
-  - python --version
-
-after_script:
-  - echo "****** destroy infrastructure ******"
-  - cd $PROJECT_DIR
-  - chmod 755 destroy_infrastructure
-  - ./destroy_infrastructure
-
 stages:
   - analyze
   - test
-  - deploy
 
 pylint_job:
   stage: analyze
   allow_failure: true
   script:
-    - echo "current branch ****** $CI_COMMIT_REF_NAME ******"
-    - echo "analyzing start..."
+    - python --version
+    - curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+    - python  get-pip.py
     - pip install pylint --quiet
-    - pylint --ignored -class=_socketobject *.py
+    - echo "analyzing start..."
+    - echo "current branch $CI_COMMIT_REF_NAME"
+    - pylint *.py
     - echo "analyzing done"
 
-test_job:
+unitTest_job:
   stage: test
   script:
-    - echo "current branch ****** $CI_COMMIT_REF_NAME ******"
     - echo "testing start..."
+    - echo "current branch $CI_COMMIT_REF_NAME"
     - cd $PROJECT_DIR/backend
+    - python3 main.py
     - python3 test_main.py
     - echo "testing done"
-  coverage: '/^TOTAL.+?(\d+\%)$/'
-
-deploy_job:
-  stage: deploy
-  script:
-    - echo "current branch ****** $CI_COMMIT_REF_NAME ******"
-    - echo "deploy start..."
-    - cd $PROJECT_DIR
-    - chmod 755 create_infrastructure
-    - chmod 755 start_services
-    - chmod update_html
-    - ./create_infrastructure
-    - ./start_services
-    - ./update_html
-    - echo "deploy done."
-  when:
-    manual
-  only:
-    master
